@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+  traefik:
+    image: "traefik:v2.1"
+    container_name: "traefik"
+    hostname: "traefik"
+    command:
+      - "--log.level=${LOG_LEVEL}"
+    networks:
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/traefik.yml:ro
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.traefik.rule: "Host(`${DASHBOARD_SUBDOMAIN}.${DOMAIN}`)"
+      traefik.http.routers.traefik.entrypoints: "web,websecure"
+      traefik.http.routers.traefik.service: "api@internal"
+      traefik.http.services.traefik.loadbalancer.server.port: "8080"
+      traefik.http.routers.traefik.middlewares: "auth"
+      traefik.http.middlewares.auth.digestauth.users: "${DASHBOARD_CREDENTIALS}"
+      traefik.http.middlewares.auth.digestauth.removeheader: "true"
+networks:
+  proxy:
+    driver: bridge
