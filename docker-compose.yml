@@ -3,12 +3,11 @@ version: "3.7"
 services:
   traefik:
     image: "traefik:v2.1"
-    container_name: "traefik"
-    hostname: "traefik"
     command:
       - "--log.level=${LOG_LEVEL}"
     networks:
-      - proxy
+      - world
+      - internal
     ports:
       - 80:80
       - 443:443
@@ -24,6 +23,15 @@ services:
       traefik.http.routers.traefik.middlewares: "auth"
       traefik.http.middlewares.auth.digestauth.users: "${DASHBOARD_CREDENTIALS}"
       traefik.http.middlewares.auth.digestauth.removeheader: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+      update_config:
+        order: start-first
 networks:
-  proxy:
-    driver: bridge
+  world:
+    driver: overlay
+    internal: false
+  internal:
+    driver: overlay
+    internal: true
