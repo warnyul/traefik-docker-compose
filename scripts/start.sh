@@ -4,8 +4,8 @@
 BASEDIR=$(dirname "$0")
 
 set -a # automatically export all variables
-source .env
-source .dev.env
+source ${BASEDIR}/../.env
+source ${BASEDIR}/../.env.dev
 set +a
 
-docker stack deploy bvarga-proxy -c ${BASEDIR}/../docker-compose.yml
+docker stack deploy $DOCKER_STACK -c ${BASEDIR}/../docker-compose.yml

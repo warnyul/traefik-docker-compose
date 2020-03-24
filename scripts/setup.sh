@@ -5,8 +5,8 @@ BASEDIR=$(dirname "$0")
 
 # Load environment variables
 set -a # automatically export all variables
-source .env
-source .dev.env
+source ${BASEDIR}/../.env
+source ${BASEDIR}/../.env.dev
 set +a
 
 # Install dnsmasq if needed
