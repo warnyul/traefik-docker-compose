@@ -5,33 +5,58 @@ services:
     image: "traefik:v2.1"
     command:
       - "--log.level=${LOG_LEVEL}"
+      - "--api.dashboard=true"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.useBindPortIP=true"
+      - "--providers.docker.network=${DOCKER_STACK}_proxy"
+      - "--providers.docker.exposedByDefault=false"
+      - "--accesslog=true"
     networks:
-      - world
-      - internal
+      - webgateway
+      - proxy
     ports:
       - 80:80
       - 443:443
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik.yml:/traefik.yml:ro
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.traefik.rule: "Host(`${DASHBOARD_SUBDOMAIN}.${DOMAIN}`)"
-      traefik.http.routers.traefik.entrypoints: "web,websecure"
-      traefik.http.routers.traefik.service: "api@internal"
-      traefik.http.services.traefik.loadbalancer.server.port: "8080"
-      traefik.http.routers.traefik.middlewares: "auth"
-      traefik.http.middlewares.auth.digestauth.users: "${DASHBOARD_CREDENTIALS}"
-      traefik.http.middlewares.auth.digestauth.removeheader: "true"
     deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
       update_config:
         order: start-first
+        parallelism: 1
+        delay: 10s
+      labels:
+        - "traefik.enable=true"
+
+        # Dashboard
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+        - "traefik.http.routers.traefik.rule=Host(`${DASHBOARD_SUBDOMAIN}.${DOMAIN}`)"
+        - "traefik.http.routers.traefik.entrypoints=web,websecure"
+        - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.routers.traefik.tls=true"
+        - "traefik.http.routers.traefik.middlewares=auth"
+        - "traefik.http.middlewares.auth.digestauth.users=${DASHBOARD_CREDENTIALS}"
+        - "traefik.http.middlewares.auth.digestauth.removeheader=true"
+        
+        # Default HTTP to HTTPS redirect
+        - "traefik.http.routers.https_redirect.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.https_redirect.entrypoints=web"
+        - "traefik.http.routers.https_redirect.priority=1"
+        - "traefik.http.routers.https_redirect.middlewares=htst_header"
+        - "traefik.http.middlewares.htst_header.headers.framedeny=true"
+        - "traefik.http.middlewares.htst_header.headers.sslredirect=true"
 networks:
-  world:
+  webgateway:
     driver: overlay
     internal: false
-  internal:
+  proxy:
     driver: overlay
     internal: true
