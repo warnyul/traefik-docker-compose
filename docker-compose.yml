@@ -9,6 +9,7 @@ services:
       - "--entryPoints.web.address=:80"
       - "--entryPoints.websecure.address=:443"
       - "--providers.docker=true"
+      - "--providers.docker.watch=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.useBindPortIP=true"
       - "--providers.docker.network=${DOCKER_STACK}_proxy"
@@ -44,7 +45,7 @@ services:
         - "traefik.http.routers.traefik.tls=true"
         - "traefik.http.routers.traefik.middlewares=auth"
         - "traefik.http.middlewares.auth.digestauth.users=${DASHBOARD_CREDENTIALS}"
-        - "traefik.http.middlewares.auth.digestauth.removeheader=true"
+        - "traefik.http.middlewares.auth.digestauth.realm=${AUTH_REALM}"
         
         # Default HTTP to HTTPS redirect
         - "traefik.http.routers.https_redirect.rule=PathPrefix(`/`)"
