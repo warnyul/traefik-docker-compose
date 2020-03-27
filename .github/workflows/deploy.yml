@@ -1,0 +1,14 @@
+name: Deploy
+
+on:
+  deployment
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Run Deploy
+      run: ./scripts/deploy.sh
