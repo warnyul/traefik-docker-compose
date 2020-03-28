@@ -1,5 +1,7 @@
 # Traefik
 
+![deploy](https://github.com/warnyul/traefik-docker-compose/workflows/deploy/badge.svg)
+
 This configuration runs a Traefik service in Swarm Mode with following configurations:
 * automatic cert resolving with [Let's encrypt](https://letsencrypt.org)
 * and a dashboard, which has been restricted by [Digest Authentication](https://docs.traefik.io/middlewares/digestauth/).
