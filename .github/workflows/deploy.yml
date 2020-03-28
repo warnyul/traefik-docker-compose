@@ -14,6 +14,7 @@ jobs:
       DOCKER_CERT: ${{ secrets.DOCKER_CERT}}
       DOCKER_KEY: ${{ secrets.DOCKER_KEY}}
       HOST: ${{ secrets.HOST}}
+      DOCKER_STACK: ${{ secrets.DOCKER_STACK }}
     steps:
     - uses: actions/checkout@v2
     - name: Setup
