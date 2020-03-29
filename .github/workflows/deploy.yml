@@ -23,4 +23,4 @@ jobs:
       run: ./scripts/deploy.sh
     - name: Clean
       if: always()
-      run: ./scripts/tear_down_ci.sh
+      run: ./scripts/after_deploy.sh
