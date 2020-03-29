@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup
-      run: ./scripts/setup_ci.sh
+      run: ./scripts/before_deploy.sh
     - name: Run Deploy
       run: ./scripts/deploy.sh
     - name: Clean
