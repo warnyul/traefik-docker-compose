@@ -22,7 +22,7 @@ services:
         - "traefik.http.routers.traefik.tls.domains[0].sans=*.${DOMAIN}"
         # Redirect to non www
         - "traefik.http.routers.www_redirect.tls=true"
-        - "traefik.http.routers.www_redirect.certresolver=letsencrypt"
+        - "traefik.http.routers.www_redirect.tls.certresolver=letsencrypt"
         - "traefik.http.routers.www_redirect.tls.domains[0].main=${DOMAIN}"
         - "traefik.http.routers.www_redirect.tls.domains[0].sans=*.${DOMAIN}"
 volumes:
