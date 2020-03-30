@@ -54,6 +54,9 @@ services:
         - "traefik.http.routers.https_redirect.middlewares=htst_header"
         - "traefik.http.middlewares.htst_header.headers.framedeny=true"
         - "traefik.http.middlewares.htst_header.headers.sslredirect=true"
+        - "traefik.http.middlewares.htst_header.headers.stsIncludeSubdomains=true"
+        - "traefik.http.middlewares.htst_header.headers.stsPreload=true"
+        - "traefik.http.middlewares.htst_header.headers.forceSTSHeader=true"
 networks:
   webgateway:
     driver: overlay
