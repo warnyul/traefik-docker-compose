@@ -57,6 +57,16 @@ services:
         - "traefik.http.middlewares.htst_header.headers.stsIncludeSubdomains=true"
         - "traefik.http.middlewares.htst_header.headers.stsPreload=true"
         - "traefik.http.middlewares.htst_header.headers.forceSTSHeader=true"
+
+        # Redirect WWW to non-WWW
+        - "traefik.http.routers.www_redirect.rule=HostRegexp(`{host:(www\\.).+}`)"
+        - "traefik.http.routers.www_redirect.entrypoints=websecure"
+        - "traefik.http.routers.www_redirect.priority=1"
+        - "traefik.http.routers.www_redirect.tls=true"
+        - "traefik.http.routers.www_redirect.middlewares=www_to_non_www"
+        - "traefik.http.middlewares.www_to_non_www.redirectregex.regex=^https://www\\.(.+)"
+        - "traefik.http.middlewares.www_to_non_www.redirectregex.replacement=https://$${1}"
+        - "traefik.http.middlewares.www_to_non_www.redirectregex.permanent=true"
 networks:
   webgateway:
     driver: overlay
