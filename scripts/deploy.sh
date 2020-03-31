@@ -17,4 +17,4 @@ docker \
   --tlskey=$DOCKER_CONFIG_DIR/key.pem \
   stack deploy $DOCKER_STACK \
   -c $PROJECTDIR/docker-compose.yml \
-  -c $PROJECTDIR/docker-compose.tls.yml
+  -c $PROJECTDIR/docker-compose.acme.yml
