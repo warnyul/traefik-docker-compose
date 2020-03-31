@@ -2,37 +2,63 @@
 
 ![deploy](https://github.com/warnyul/traefik-docker-compose/workflows/deploy/badge.svg)
 
-This configuration runs a Traefik service in Swarm Mode with following configurations:
-* automatic cert resolving with [Let's Encrypt](https://letsencrypt.org)
+I created this repo for personal use. My goal was to easily publish web applications under my domain name.
+Traefik helped me a lot. My applications no matter how and where I want to access them. It works with Swarm for now, but I plan to build my infrastructure with [Kubernetes](https://kubernetes.io) later.
+
+So, this configuration runs a Traefik service in Swarm Mode with following configurations:
+* automatic cert resolving with [Let's Encrypt](https://letsencrypt.org),
+* global HTTP to HTTPS redirection with STS header,
+* global www to non-www redirection,
 * and a dashboard, which has been restricted by [Digest Authentication](https://docs.traefik.io/middlewares/digestauth/).
 
-## Configurations
+## Requirements
 
-Configurations are stored in .env files:
-* `.env`: It is used to define enviromnent variables for the production environment. It has been configured on CI/CD.
-* `.env.dev`: It is used to define enviromnent variables for the development environment.
+This compose file has been created for my Droplet on Digital Ocean, so you need one, or you just modify the `certresolver` configuration in [docker-compose.acme.yml](docker-compose.acme.yml) file.
 
-## Environment variables:
+## Environment settings
+
+Environment variables are stored in .env files. I know to manage `.env` files are not supported by `docker stack deploy` command. However, I like this idea to manage environment variables with `.env` files. So, I have created two files (`.env`, `.env.dev`). So, I use `source` command to load variables from `.env` files. I have two shell scripts. One for start the application on local machine ([start.sh](./scripts/start.sh)), and another to deploy the application to remote.
+
+I recommend to do not store `.env` file in git. Better, if this is safely stored in CI/CD, Vault or other secret management software.
+
 ### For deployment
-These configurations are used in the [deploy.sh](./scripts/deploy.sh) to publish Traefik service.
-* `HOST`: Hostname for Docker Daemon sockets.
+
+To deploy this Traefik service, you need to set the following two environment variables before run [deploy.sh](./scripts/deploy.sh). I use Daemon sockets to publish my services to Digital Ocean. If you are not comfortable with this just jump to the [How to use on my server?](./README.md#How-to-use-on-my-server?) to use on my server?) section to read alternative solutions.
+
+* `HOST`: Host without port number for Daemon socket(s) to connect to. The deploy script default connects to the 2376 port.
 * `DOCKER_STACK`: A stack name to deploy service with `docker stack deploy` command. It also used for external network definitions.
 
 ### Traefik service
-* `DOMAIN`: A domain name where Traefik will listen, and this configuration is used for cert resolving too.
+* `DOMAIN`: The domain name where Traefik will listen, and it is already used for certificate resolving too.
 * `LOG_LEVEL`: Log level of Traefik. Logging levels are `DEBUG`, `PANIC`, `FATAL`, `ERROR`, `WARN`, and `INFO`.
+* `DOCKER_STACK`: Used for set `traefik.provider.docker.network` variable.
 
 ### Tls (only used in production)
-* `ACME_EMAIL`: An email address, which has been used by [ACME](https://github.com/acmesh-official/acme.sh) to renew Tls certificates.
-* `DO_AUTH_TOKEN`: Digital Ocean authentication token, which has been used by ACME to provisioning a DNS record on Digital Ocean.
+* `ACME_EMAIL`: An email address, which has been used by [ACME](https://github.com/acmesh-official/acme.sh) to create and renew certificates.
+* `DO_AUTH_TOKEN`: Digital Ocean authentication token, which has been used by ACME to resolve `CNAME` when creating `dns-01` challenge.
 
 ### Traefik Dashboard
 * `DASHBOARD_CREDENTIALS`: Credentials to access Traefik's dashboard. Use `htdigest` to generate credentials. For example: `htdigest -c pwd.txt admin traefik`.
 * `DASHBOARD_SUBDOMAIN`: Subdomain where you want to access Traefik's dashboard.
 
-## Setup Development Environment
+## How to run on a local machine?
+
+Before you start the service, you should run `./scripts/setup.sh` to prepare the development environment on your machine.
+This will create a DNS server, which makes easy the subdomain management.
+
+After that, run `./scripts/start.sh`.
 
 By default, Traefik's dashboard will be accessible with _admin:admin_ credentials on https://traefik.bvarga.localhost.
+
+## How to use on my server?
+
+First, you should protect Docker daemon sockets on your server. You can use my setup script [here](https://github.com/warnyul/digital-ocean-setup#protect_dockersh), but this just generates some config file without certificates. So, I recommend you to follow the official documentation [here](https://docs.docker.com/engine/security/https/). Do not forget to set up your client certificates as well.
+
+After that, set up environment variables too, based on what you read earlier.
+
+Finally, run `./scripts/deploy.sh`
+
+If you are not comfortable with this, just check out this repo on your server, then set up environment variables and run `./scripts/start.sh`. Just remember this script using `.env.dev` file, so you should set up variables in this file.
 
 ## License
 
