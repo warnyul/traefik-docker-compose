@@ -58,6 +58,7 @@ services:
         - "traefik.http.middlewares.htst_header.headers.sslredirect=true"
         - "traefik.http.middlewares.htst_header.headers.stsIncludeSubdomains=true"
         - "traefik.http.middlewares.htst_header.headers.stsPreload=true"
+        - "traefik.http.middlewares.htst_header.headers.stsSeconds=15768000"
         - "traefik.http.middlewares.htst_header.headers.forceSTSHeader=true"
 
         # Redirect WWW to non-WWW
