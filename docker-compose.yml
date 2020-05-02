@@ -1,5 +1,45 @@
 version: "3.7"
 
+x-traefik-labels: &traefik-labels
+  labels:
+    - "traefik.enable=true"
+
+    # Dashboard
+    - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    - "traefik.http.routers.traefik.rule=Host(`${DASHBOARD_SUBDOMAIN}.${DOMAIN}`)"
+    - "traefik.http.routers.traefik.entrypoints=web,websecure"
+    - "traefik.http.routers.traefik.service=api@internal"
+    - "traefik.http.routers.traefik.tls=true"
+    - "traefik.http.routers.traefik.tls.domains[0].main=${DOMAIN}"
+    - "traefik.http.routers.traefik.tls.domains[0].sans=*.${DOMAIN}"
+    - "traefik.http.routers.traefik.middlewares=auth"
+    - "traefik.http.middlewares.auth.digestauth.users=${DASHBOARD_CREDENTIALS}"
+    - "traefik.http.middlewares.auth.digestauth.realm=${AUTH_REALM}"
+
+    # Default HTTP to HTTPS redirect
+    - "traefik.http.routers.https_redirect.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.https_redirect.entrypoints=web"
+    - "traefik.http.routers.https_redirect.priority=1"
+    - "traefik.http.routers.https_redirect.middlewares=htst_header"
+    - "traefik.http.middlewares.htst_header.headers.framedeny=true"
+    - "traefik.http.middlewares.htst_header.headers.sslredirect=true"
+    - "traefik.http.middlewares.htst_header.headers.stsIncludeSubdomains=true"
+    - "traefik.http.middlewares.htst_header.headers.stsPreload=true"
+    - "traefik.http.middlewares.htst_header.headers.stsSeconds=15768000"
+    - "traefik.http.middlewares.htst_header.headers.forceSTSHeader=true"
+
+    # Redirect WWW to non-WWW
+    - "traefik.http.routers.www_redirect.rule=HostRegexp(`{host:(www\\.).+}`)"
+    - "traefik.http.routers.www_redirect.entrypoints=websecure"
+    - "traefik.http.routers.www_redirect.priority=1"
+    - "traefik.http.routers.www_redirect.tls=true"
+    - "traefik.http.routers.www_redirect.tls.domains[0].main=${DOMAIN}"
+    - "traefik.http.routers.www_redirect.tls.domains[0].sans=*.${DOMAIN}"
+    - "traefik.http.routers.www_redirect.middlewares=www_to_non_www"
+    - "traefik.http.middlewares.www_to_non_www.redirectregex.regex=^https://www\\.(.+)"
+    - "traefik.http.middlewares.www_to_non_www.redirectregex.replacement=https://$${1}"
+    - "traefik.http.middlewares.www_to_non_www.redirectregex.permanent=true"
+
 services:
   traefik:
     image: "traefik:v2.1"
@@ -10,7 +50,7 @@ services:
       - "--entryPoints.websecure.address=:443"
       - "--providers.docker=true"
       - "--providers.docker.watch=true"
-      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.swarmMode=${SWARM_MODE}"
       - "--providers.docker.useBindPortIP=true"
       - "--providers.docker.network=${DOCKER_STACK}_proxy"
       - "--providers.docker.exposedByDefault=false"
@@ -24,6 +64,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     stop_grace_period: 120s
+    <<: *traefik-labels
     deploy:
       mode: global
       placement:
@@ -38,48 +79,12 @@ services:
         order: start-first
         failure_action: rollback
         monitor: 120s
-      labels:
-        - "traefik.enable=true"
+      <<: *traefik-labels
 
-        # Dashboard
-        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-        - "traefik.http.routers.traefik.rule=Host(`${DASHBOARD_SUBDOMAIN}.${DOMAIN}`)"
-        - "traefik.http.routers.traefik.entrypoints=web,websecure"
-        - "traefik.http.routers.traefik.service=api@internal"
-        - "traefik.http.routers.traefik.tls=true"
-        - "traefik.http.routers.traefik.tls.domains[0].main=${DOMAIN}"
-        - "traefik.http.routers.traefik.tls.domains[0].sans=*.${DOMAIN}"
-        - "traefik.http.routers.traefik.middlewares=auth"
-        - "traefik.http.middlewares.auth.digestauth.users=${DASHBOARD_CREDENTIALS}"
-        - "traefik.http.middlewares.auth.digestauth.realm=${AUTH_REALM}"
-        
-        # Default HTTP to HTTPS redirect
-        - "traefik.http.routers.https_redirect.rule=PathPrefix(`/`)"
-        - "traefik.http.routers.https_redirect.entrypoints=web"
-        - "traefik.http.routers.https_redirect.priority=1"
-        - "traefik.http.routers.https_redirect.middlewares=htst_header"
-        - "traefik.http.middlewares.htst_header.headers.framedeny=true"
-        - "traefik.http.middlewares.htst_header.headers.sslredirect=true"
-        - "traefik.http.middlewares.htst_header.headers.stsIncludeSubdomains=true"
-        - "traefik.http.middlewares.htst_header.headers.stsPreload=true"
-        - "traefik.http.middlewares.htst_header.headers.stsSeconds=15768000"
-        - "traefik.http.middlewares.htst_header.headers.forceSTSHeader=true"
-
-        # Redirect WWW to non-WWW
-        - "traefik.http.routers.www_redirect.rule=HostRegexp(`{host:(www\\.).+}`)"
-        - "traefik.http.routers.www_redirect.entrypoints=websecure"
-        - "traefik.http.routers.www_redirect.priority=1"
-        - "traefik.http.routers.www_redirect.tls=true"
-        - "traefik.http.routers.www_redirect.tls.domains[0].main=${DOMAIN}"
-        - "traefik.http.routers.www_redirect.tls.domains[0].sans=*.${DOMAIN}"
-        - "traefik.http.routers.www_redirect.middlewares=www_to_non_www"
-        - "traefik.http.middlewares.www_to_non_www.redirectregex.regex=^https://www\\.(.+)"
-        - "traefik.http.middlewares.www_to_non_www.redirectregex.replacement=https://$${1}"
-        - "traefik.http.middlewares.www_to_non_www.redirectregex.permanent=true"
 networks:
   webgateway:
-    driver: overlay
+    driver: ${DOCKER_NETWORK_DRIVER}
     internal: false
   proxy:
-    driver: overlay
+    driver: ${DOCKER_NETWORK_DRIVER}
     internal: true

@@ -1,5 +1,14 @@
 version: "3.7"
 
+
+x-acme-traefik-labels: &acme-traefik-labels
+  - "traefik.http.routers.traefik.tls=true"
+  - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+  # Redirect to non www
+  - "traefik.http.routers.www_redirect.tls=true"
+  - "traefik.http.routers.www_redirect.tls.certresolver=letsencrypt"
+
+
 services:
   traefik:
     command:
@@ -14,12 +23,11 @@ services:
       - type: volume
         source: letsencrypt
         target: "/etc/traefik/acme/"
+    labels:
+    <<: *acme-traefik-labels
     deploy:
       labels:
-        - "traefik.http.routers.traefik.tls=true"
-        - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-        # Redirect to non www
-        - "traefik.http.routers.www_redirect.tls=true"
-        - "traefik.http.routers.www_redirect.tls.certresolver=letsencrypt"
+      <<: *acme-traefik-labels
+
 volumes:
   letsencrypt:

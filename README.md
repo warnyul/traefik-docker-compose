@@ -26,7 +26,8 @@ I recommend to do not store `.env` file in git. Better, if this is safely stored
 To deploy this Traefik service, you need to set the following two environment variables before run [deploy.sh](./scripts/deploy.sh). I use Daemon sockets to publish my services to Digital Ocean. If you are not comfortable with this just jump to the [How to use on my server?](./README.md#How-to-use-on-my-server?) to use on my server?) section to read alternative solutions.
 
 * `HOST`: Host without port number for Daemon socket(s) to connect to. The deploy script default connects to the 2376 port.
-* `DOCKER_STACK`: A stack name to deploy service with `docker stack deploy` command. It also used for external network definitions.
+* `DOCKER_STACK`: A stack name to deploy service with `docker stack deploy` command or if services has started without swarm mode it will used for the compose project name. It also used for external network definitions.
+* `SWARM_MODE`: true or false. When it is true, `./scripts/start.sh` and `./scripts/deploy.sh` will use `docker stack deploy` instead `docker-compose up`
 
 ### Traefik service
 * `DOMAIN`: The domain name where Traefik will listen, and it is already used for certificate resolving too.
