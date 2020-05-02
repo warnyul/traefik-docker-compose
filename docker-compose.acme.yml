@@ -2,6 +2,7 @@ version: "3.7"
 
 
 x-acme-traefik-labels: &acme-traefik-labels
+  labels:
   - "traefik.http.routers.traefik.tls=true"
   - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
   # Redirect to non www
